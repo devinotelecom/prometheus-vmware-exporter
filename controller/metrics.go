@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"strings"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"github.com/vmware/govmomi/view"
@@ -54,6 +55,12 @@ var (
 		Subsystem: "host",
 		Name:      "disk_ok",
 		Help:      "Disk is working normally",
+	}, []string{"host_name", "device"})
+	prometheusStorageStatus = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Subsystem: "host",
+		Name:      "storage_status",
+		Help:      "green 0, yellow 1, red 2",
 	}, []string{"host_name", "device"})
 	prometheusTotalDs = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
@@ -145,6 +152,7 @@ func RegistredMetrics() {
 		prometheusTotalMem,
 		prometheusUsageMem,
 		prometheusDiskOk,
+		prometheusStorageStatus,
 		prometheusTotalDs,
 		prometheusUsageDs,
 		prometheusVmBoot,
@@ -175,6 +183,26 @@ func NewVmwareHostMetrics(host string, username string, password string, logger 
 		logger.Fatal(err)
 	}
 	for _, hs := range hss {
+		for _, ssi := range hs.Summary.Runtime.HealthSystemRuntime.HardwareStatusInfo.StorageStatusInfo {
+			name := ssi.Name
+			if strings.Count(name, ":") == 4 && strings.Contains(name, "Disk") {
+				// Remove disk status from name to make the name more stable
+				name = name[:strings.LastIndex(name, ":")]
+			}
+			name = strings.TrimSpace(name)
+			status := -1
+			switch ssi.Status.GetElementDescription().Key {
+			case "Green":
+				status = 0
+			case "Yellow":
+				status = 1
+			case "Red":
+				status = 2
+			}
+			if (status != -1) {
+				prometheusStorageStatus.WithLabelValues(host, name).Set(float64(status))
+			}
+		}
 		prometheusHostPowerState.WithLabelValues(host).Set(powerState(hs.Summary.Runtime.PowerState))
 		prometheusHostBoot.WithLabelValues(host).Set(float64(hs.Summary.Runtime.BootTime.Unix()))
 		prometheusTotalCpu.WithLabelValues(host).Set(totalCpu(hs))
