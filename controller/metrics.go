@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"context"
+
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
-	"github.com/vmware/govmomi/find"
 )
 
 const namespace = "vmware"
@@ -76,13 +77,13 @@ var (
 	prometheusVmCpuAval = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: "vm",
-		Name:      "cpu_avaleblemhz",
+		Name:      "cpu_available_mhz",
 		Help:      "VMWare VM usage CPU",
 	}, []string{"vm_name", "host_name"})
 	prometheusVmCpuUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: "vm",
-		Name:      "cpu_usagemhz",
+		Name:      "cpu_usage_mhz",
 		Help:      "VMWare VM usage CPU",
 	}, []string{"vm_name", "host_name"})
 	prometheusVmNumCpu = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -94,7 +95,7 @@ var (
 	prometheusVmMemAval = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Subsystem: "vm",
-		Name:      "mem_avaleble",
+		Name:      "mem_available",
 		Help:      "Available memory",
 	}, []string{"vm_name", "host_name"})
 	prometheusVmMemUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{

@@ -1,5 +1,5 @@
 # prometheus-vmware-exporter
-Collect metrics ESXi Host
+Collect metrics from an ESXi Host
 
 ## Build
 ```sh 
