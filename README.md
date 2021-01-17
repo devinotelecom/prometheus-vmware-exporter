@@ -8,7 +8,7 @@ docker build -t prometheus-vmware-exporter .
 
 ## Run
 ```sh
-docker run -b \
+docker run -d \
   --restart=always \
   --name=prometheus-vmware-exporter \
   --env=ESX_HOST esx.domain.local \
